@@ -188,8 +188,11 @@
 
         .table-container {
             overflow-x: auto;
+            overflow-y: auto;
+            max-height: 600px;
             border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            position: relative;
         }
 
         table {
@@ -206,7 +209,8 @@
             font-weight: 600;
             position: sticky;
             top: 0;
-            z-index: 10;
+            z-index: 100;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         td {
@@ -214,8 +218,16 @@
             border-bottom: 1px solid #e0e0e0;
         }
 
-        tr:hover {
+        tbody tr:nth-child(even) {
             background: #f8f9fa;
+        }
+
+        tbody tr:nth-child(odd) {
+            background: white;
+        }
+
+        tbody tr:hover {
+            background: #e3f2fd !important;
         }
 
         .no-results {
