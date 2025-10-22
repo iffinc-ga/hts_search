@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTS Code Search Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .upload-section {
+            background: #f8f9fa;
+            border: 2px dashed #667eea;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+        }
+
+        .upload-section:hover {
+            border-color: #764ba2;
+            background: #f0f0f5;
+        }
+
+        .upload-section.dragover {
+            background: #e8eaf6;
+            border-color: #5e35b1;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .upload-label {
+            display: inline-block;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: transform 0.2s ease;
+        }
+
+        .upload-label:hover {
+            transform: translateY(-2px);
+        }
+
+        .file-info {
+            margin-top: 15px;
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        .search-section {
+            margin-bottom: 30px;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: transform 0.2s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat-box {
+            background: #f8f9fa;
+            padding: 15px 25px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .stat-box label {
+            display: block;
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .stat-box span {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .results-section {
+            margin-top: 20px;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .results-header h2 {
+            color: #333;
+        }
+
+        .export-btn {
+            padding: 8px 20px;
+            background: #28a745;
+            font-size: 0.9em;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+            font-size: 1.1em;
+        }
+
+        .error {
+            background: #ffe6e6;
+            border: 1px solid #ff4444;
+            color: #cc0000;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .success {
+            background: #e6ffe6;
+            border: 1px solid #44ff44;
+            color: #008800;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .highlight {
+            background: #fff3cd;
+            font-weight: bold;
+        }
+
+        .instructions {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .instructions h3 {
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+
+        .instructions ul {
+            margin-left: 20px;
+            color: #555;
+        }
+
+        .instructions li {
+            margin: 5px 0;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.5em;
+            }
+
+            .content {
+                padding: 15px;
+            }
+
+            .search-box {
+                flex-direction: column;
+            }
+
+            .stats {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📋 HTS Code Search Tool</h1>
+            <p>Search HTS codes across multiple columns and retrieve all related line items</p>
+        </div>
+
+        <div class="content">
+            <div class="instructions">
+                <h3>How to Use:</h3>
+                <ul>
+                    <li>Upload your CSV file using the button below or drag & drop</li>
+                    <li>Enter the HTS code you want to search for</li>
+                    <li>Click "Search" to find all line items with matching Broker Reference numbers</li>
+                    <li>Export results to CSV if needed</li>
+                </ul>
+            </div>
+
+            <div class="upload-section" id="uploadSection">
+                <label for="csvFile" class="upload-label">
+                    📁 Choose CSV File
+                </label>
+                <input type="file" id="csvFile" accept=".csv">
+                <div class="file-info" id="fileInfo">No file selected</div>
+            </div>
+
+            <div id="messageArea"></div>
+
+            <div class="search-section" style="display: none;" id="searchSection">
+                <div class="stats" id="statsArea"></div>
+                
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Enter HTS Code (e.g., 8302423015)" />
+                    <button onclick="searchHTS()" id="searchBtn">🔍 Search</button>
+                </div>
+
+                <div class="results-section" id="resultsSection"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let csvData = [];
+        let processedData = [];
+        const HTS_COLUMNS = [
+            'HTS Code',
+            'ADL1_HTS_Number',
+            'ADL2_HTS_Number',
+            'ADL3_HTS_Number',
+            'ADL4_HTS_Number',
+            'ADL5_HTS_Number',
+            'ADL6_HTS_Number',
+            'ADL7_HTS_Number'
+        ];
+
+        // Drag and drop functionality
+        const uploadSection = document.getElementById('uploadSection');
+        
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadSection.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadSection.addEventListener(eventName, () => {
+                uploadSection.classList.add('dragover');
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadSection.addEventListener(eventName, () => {
+                uploadSection.classList.remove('dragover');
+            });
+        });
+
+        uploadSection.addEventListener('drop', handleDrop);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files.length > 0) {
+                document.getElementById('csvFile').files = files;
+                handleFileUpload({ target: { files: files } });
+            }
+        }
+
+        document.getElementById('csvFile').addEventListener('change', handleFileUpload);
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            document.getElementById('fileInfo').textContent = `Loading: ${file.name}...`;
+            showMessage('Processing file...', 'loading');
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const text = e.target.result;
+                    parseCSV(text);
+                    document.getElementById('fileInfo').textContent = `✓ Loaded: ${file.name}`;
+                    showMessage(`Successfully loaded ${file.name} with ${csvData.length - 1} rows`, 'success');
+                    document.getElementById('searchSection').style.display = 'block';
+                    displayStats();
+                } catch (error) {
+                    showMessage(`Error processing file: ${error.message}`, 'error');
+                    document.getElementById('fileInfo').textContent = 'Error loading file';
+                }
+            };
+            reader.onerror = function() {
+                showMessage('Error reading file', 'error');
+            };
+            reader.readAsText(file);
+        }
+
+        function parseCSV(text) {
+            const lines = text.split('\n');
+            csvData = [];
+            
+            for (let line of lines) {
+                if (!line.trim()) continue;
+                
+                const row = [];
+                let current = '';
+                let inQuotes = false;
+                
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+                    const nextChar = line[i + 1];
+                    
+                    if (char === '"') {
+                        if (inQuotes && nextChar === '"') {
+                            current += '"';
+                            i++;
+                        } else {
+                            inQuotes = !inQuotes;
+                        }
+                    } else if (char === ',' && !inQuotes) {
+                        row.push(current);
+                        current = '';
+                    } else {
+                        current += char;
+                    }
+                }
+                row.push(current);
+                csvData.push(row);
+            }
+
+            // Process data with FFIL on Broker Ref #
+            processData();
+        }
+
+        function processData() {
+            if (csvData.length === 0) return;
+
+            const headers = csvData[0];
+            const brokerRefIndex = headers.indexOf('Broker Ref #');
+            const lineItemIndex = headers.indexOf('Line Item #');
+            
+            processedData = [];
+            let lastBrokerRef = '';
+
+            for (let i = 0; i < csvData.length; i++) {
+                const row = csvData[i];
+                const rowObj = {};
+                
+                headers.forEach((header, index) => {
+                    rowObj[header] = row[index] || '';
+                });
+
+                // Forward fill Broker Ref #
+                if (i > 0) { // Skip header row
+                    if (rowObj['Broker Ref #'].trim() === '') {
+                        rowObj['Broker Ref #'] = lastBrokerRef;
+                    } else {
+                        lastBrokerRef = rowObj['Broker Ref #'];
+                    }
+                }
+
+                processedData.push(rowObj);
+            }
+        }
+
+        function displayStats() {
+            const uniqueBrokerRefs = new Set();
+            const htsCodesFound = new Set();
+            
+            for (let i = 1; i < processedData.length; i++) {
+                const row = processedData[i];
+                if (row['Broker Ref #']) {
+                    uniqueBrokerRefs.add(row['Broker Ref #']);
+                }
+                HTS_COLUMNS.forEach(col => {
+                    if (row[col] && row[col].trim()) {
+                        htsCodesFound.add(row[col].trim());
+                    }
+                });
+            }
+
+            const statsHTML = `
+                <div class="stat-box">
+                    <label>Total Rows</label>
+                    <span>${processedData.length - 1}</span>
+                </div>
+                <div class="stat-box">
+                    <label>Unique Broker Refs</label>
+                    <span>${uniqueBrokerRefs.size}</span>
+                </div>
+                <div class="stat-box">
+                    <label>Unique HTS Codes</label>
+                    <span>${htsCodesFound.size}</span>
+                </div>
+            `;
+            document.getElementById('statsArea').innerHTML = statsHTML;
+        }
+
+        function searchHTS() {
+            const searchValue = document.getElementById('searchInput').value.trim();
+            
+            if (!searchValue) {
+                showMessage('Please enter an HTS code to search', 'error');
+                return;
+            }
+
+            const results = [];
+            const matchedBrokerRefs = new Set();
+
+            // First pass: find all Broker Ref #s that have the matching HTS code
+            for (let i = 1; i < processedData.length; i++) {
+                const row = processedData[i];
+                let found = false;
+
+                HTS_COLUMNS.forEach(col => {
+                    if (row[col] && row[col].trim() === searchValue) {
+                        found = true;
+                    }
+                });
+
+                if (found && row['Broker Ref #']) {
+                    matchedBrokerRefs.add(row['Broker Ref #']);
+                }
+            }
+
+            // Second pass: get all rows with matching Broker Ref #s
+            for (let i = 1; i < processedData.length; i++) {
+                const row = processedData[i];
+                if (matchedBrokerRefs.has(row['Broker Ref #'])) {
+                    results.push(row);
+                }
+            }
+
+            displayResults(results, searchValue);
+        }
+
+        function displayResults(results, searchValue) {
+            const resultsSection = document.getElementById('resultsSection');
+            
+            if (results.length === 0) {
+                resultsSection.innerHTML = `
+                    <div class="no-results">
+                        No results found for HTS Code: <strong>${searchValue}</strong>
+                    </div>
+                `;
+                return;
+            }
+
+            // Determine which HTS columns have data
+            const activeHTSColumns = [];
+            HTS_COLUMNS.forEach(col => {
+                for (let row of results) {
+                    if (row[col] && row[col].trim()) {
+                        activeHTSColumns.push(col);
+                        break;
+                    }
+                }
+            });
+
+            let tableHTML = `
+                <div class="results-header">
+                    <h2>Search Results (${results.length} line items found)</h2>
+                    <button class="export-btn" onclick="exportResults()">📥 Export to CSV</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Broker Ref #</th>
+                                <th>Line Item #</th>
+                                ${activeHTSColumns.map(col => `<th>${col}</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            results.forEach(row => {
+                tableHTML += '<tr>';
+                tableHTML += `<td>${row['Broker Ref #'] || ''}</td>`;
+                tableHTML += `<td>${row['Line Item #'] || ''}</td>`;
+                
+                activeHTSColumns.forEach(col => {
+                    const value = row[col] || '';
+                    const isMatch = value.trim() === searchValue;
+                    tableHTML += `<td class="${isMatch ? 'highlight' : ''}">${value}</td>`;
+                });
+                
+                tableHTML += '</tr>';
+            });
+
+            tableHTML += '</tbody></table></div>';
+            resultsSection.innerHTML = tableHTML;
+
+            // Store results for export
+            window.currentResults = results;
+            window.activeHTSColumns = activeHTSColumns;
+        }
+
+        function exportResults() {
+            if (!window.currentResults || window.currentResults.length === 0) {
+                showMessage('No results to export', 'error');
+                return;
+            }
+
+            const headers = ['Broker Ref #', 'Line Item #', ...window.activeHTSColumns];
+            let csv = headers.join(',') + '\n';
+
+            window.currentResults.forEach(row => {
+                const values = [
+                    `"${row['Broker Ref #'] || ''}"`,
+                    `"${row['Line Item #'] || ''}"`,
+                    ...window.activeHTSColumns.map(col => `"${row[col] || ''}"`)
+                ];
+                csv += values.join(',') + '\n';
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `hts_search_results_${new Date().getTime()}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+
+            showMessage('Results exported successfully!', 'success');
+        }
+
+        function showMessage(message, type) {
+            const messageArea = document.getElementById('messageArea');
+            const className = type === 'loading' ? 'loading' : type === 'error' ? 'error' : 'success';
+            messageArea.innerHTML = `<div class="${className}">${message}</div>`;
+            
+            if (type !== 'loading') {
+                setTimeout(() => {
+                    messageArea.innerHTML = '';
+                }, 5000);
+            }
+        }
+
+        // Allow search on Enter key
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchHTS();
+            }
+        });
+    </script>
+</body>
+</html>
